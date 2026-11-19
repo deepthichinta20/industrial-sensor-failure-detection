@@ -397,7 +397,28 @@ Developed as an IoT and Embedded Systems project.
 
 
 \---
+## Project Screenshots
 
+### Hardware Setup
+![Hardware Setup](images/hardware-setup.jpeg)
+
+### OLED Display
+![OLED Display](images/oled-display.jpeg)
+
+### Dashboard
+![Dashboard](images/dashboard.jpeg)
+
+### Sensor Analytics
+![Sensor Analytics](images/sensoranalytics.jpeg)
+
+### Sensor Readings
+![Sensor Readings](images/readings.jpeg)
+
+### Alert History
+![Alerts](images/alerts.jpeg)
+
+### SMS Notification
+![SMS Alert](images/sms.jpeg)
 
 
 \*This project demonstrates the integration of embedded systems, IoT communication, Python analytics, and web-based monitoring.\*
