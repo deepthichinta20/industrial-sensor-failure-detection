@@ -1,0 +1,28 @@
+
+# Secrets
+.env
+.env.*
+**/.env
+**/.env.*
+
+# Python
+__pycache__/
+*.pyc
+venv/
+.venv/
+
+# Sensor data and logs
+dashboard/sensor_readings.csv
+dashboard/alert_history.json
+*.log
+*.tmp
+
+# Installed software and temporary files
+ArduinoTemp/
+Mosquitto/
+
+# Editors and operating system
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

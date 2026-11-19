@@ -1,0 +1,1256 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Industrial IQ | Sensor Monitoring</title>
+
+<style>
+:root {
+    --navy:#14243a;
+    --blue:#3478f6;
+    --bg:#f3f6fb;
+    --white:#fff;
+    --text:#172b4d;
+    --muted:#738198;
+    --border:#e5eaf2;
+    --green:#159b72;
+    --red:#dc414b;
+    --yellow:#d99117;
+}
+
+* { box-sizing:border-box; margin:0; padding:0; }
+
+html { scroll-behavior:smooth; scroll-padding-top:20px; }
+
+body {
+    font-family:"Segoe UI",Arial,sans-serif;
+    background:var(--bg);
+    color:var(--text);
+}
+
+button,a { font:inherit; }
+button { cursor:pointer; }
+
+.app { display:flex; min-height:100vh; }
+
+.sidebar {
+    width:235px;
+    background:var(--navy);
+    color:white;
+    padding:28px 18px;
+    flex-shrink:0;
+}
+
+.brand { font-size:21px; font-weight:800; letter-spacing:1px; }
+.brand-subtitle { color:#9cacc2; font-size:10px; letter-spacing:2px; margin-top:6px; }
+
+.nav-title {
+    margin:42px 12px 14px;
+    color:#8394ad;
+    font-size:10px;
+    letter-spacing:1.5px;
+}
+
+.nav-item {
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:13px 14px;
+    border-radius:9px;
+    color:#c5d0e0;
+    margin-bottom:7px;
+    font-size:13px;
+    text-decoration:none;
+    border-left:3px solid transparent;
+}
+
+.nav-item:hover { background:#203652; color:white; }
+.nav-item.active { background:#263e5e; color:white; border-left-color:#5794ff; }
+
+.sidebar-footer {
+    margin-top:40px;
+    padding:14px;
+    border:1px solid #30435d;
+    border-radius:10px;
+    color:#b9c6d8;
+    font-size:12px;
+    line-height:1.8;
+}
+
+.main { flex:1; min-width:0; padding:28px; }
+
+.topbar {
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:16px;
+    margin-bottom:27px;
+    flex-wrap:wrap;
+}
+
+h1 { font-size:25px; margin-bottom:7px; }
+.subtitle { font-size:13px; color:var(--muted); }
+
+.top-status {
+    display:flex;
+    align-items:center;
+    gap:9px;
+    background:white;
+    border:1px solid var(--border);
+    border-radius:10px;
+    padding:12px 16px;
+    font-size:12px;
+    font-weight:700;
+}
+
+.dot { width:9px; height:9px; border-radius:50%; background:var(--green); display:inline-block; }
+.dot.offline { background:var(--red); }
+
+.section-heading {
+    font-size:17px;
+    margin:30px 0 14px;
+    font-weight:750;
+    scroll-margin-top:20px;
+}
+
+.cards {
+    display:grid;
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:16px;
+}
+
+.card {
+    background:var(--white);
+    padding:20px;
+    border-radius:13px;
+    border:1px solid var(--border);
+    box-shadow:0 3px 12px rgba(25,45,75,.025);
+    min-width:0;
+}
+
+.card-label { color:var(--muted); font-size:12px; font-weight:600; margin-bottom:15px; }
+.card-value { font-size:29px; font-weight:750; letter-spacing:-.7px; overflow-wrap:anywhere; }
+.unit { font-size:13px; color:var(--muted); font-weight:500; }
+.card-note { margin-top:12px; font-size:11px; color:var(--muted); }
+
+.status-text { font-size:22px; font-weight:800; color:var(--green); }
+.status-text.WARNING { color:var(--yellow); }
+.status-text.CRITICAL,.status-text.ERROR,.status-text.FAULT { color:var(--red); }
+
+.two-columns {
+    display:grid;
+    grid-template-columns:1.4fr 1fr;
+    gap:16px;
+}
+
+.panel {
+    background:white;
+    border:1px solid var(--border);
+    border-radius:13px;
+    padding:21px;
+    min-width:0;
+    margin-bottom:16px;
+}
+
+.panel h3 { font-size:15px; margin-bottom:6px; }
+
+.panel-description {
+    color:var(--muted);
+    font-size:12px;
+    margin-bottom:18px;
+    line-height:1.6;
+}
+
+.chart-wrap { height:210px; width:100%; position:relative; }
+canvas { width:100%; height:100%; display:block; }
+
+.axis-grid {
+    display:grid;
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:12px;
+}
+
+.axis-item {
+    padding:16px 12px;
+    background:#f6f8fc;
+    border:1px solid #edf0f6;
+    border-radius:10px;
+    min-width:0;
+}
+
+.axis-label { color:var(--muted); font-size:11px; margin-bottom:10px; font-weight:650; }
+.axis-value { font-size:20px; font-weight:800; overflow-wrap:anywhere; color:#203b61; }
+.axis-unit { font-size:10px; color:var(--muted); margin-top:5px; }
+
+.alert-panel {
+    display:flex;
+    align-items:flex-start;
+    gap:14px;
+    background:#f7f9fd;
+    border:1px solid var(--border);
+    border-radius:11px;
+    padding:17px;
+}
+
+.alert-icon {
+    width:38px;
+    height:38px;
+    border-radius:10px;
+    background:#e3f7ef;
+    color:var(--green);
+    display:grid;
+    place-items:center;
+    font-size:20px;
+    flex-shrink:0;
+}
+
+.alert-icon.WARNING,.alert-icon.CRITICAL,.alert-icon.ERROR,.alert-icon.FAULT {
+    background:#fff0ed;
+    color:var(--red);
+}
+
+.alert-title { font-size:13px; font-weight:750; margin-bottom:5px; }
+
+.alert-message {
+    color:var(--muted);
+    font-size:12px;
+    line-height:1.6;
+    overflow-wrap:anywhere;
+}
+
+.info-grid {
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:12px;
+}
+
+.info-box {
+    background:#f6f8fc;
+    border:1px solid #edf0f6;
+    border-radius:10px;
+    padding:15px;
+    min-width:0;
+}
+
+.info-label { color:var(--muted); font-size:11px; margin-bottom:8px; }
+.info-value { font-size:14px; font-weight:750; overflow-wrap:anywhere; }
+
+.button-row { display:flex; flex-wrap:wrap; gap:10px; margin-bottom:16px; }
+
+.btn {
+    border:0;
+    border-radius:8px;
+    padding:11px 15px;
+    font-size:12px;
+    font-weight:700;
+    background:var(--blue);
+    color:white;
+    text-decoration:none;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:7px;
+}
+
+.btn:hover { filter:brightness(.94); }
+.btn.secondary { background:#eaf0fb; color:#25436d; }
+
+.table-wrap { overflow-x:auto; width:100%; }
+
+table { width:100%; border-collapse:collapse; font-size:12px; white-space:nowrap; }
+th,td { text-align:left; padding:12px 10px; border-bottom:1px solid var(--border); }
+th { color:var(--muted); font-weight:700; background:#f8faff; }
+td { color:#30425e; }
+
+.empty-row { color:var(--muted); text-align:center; padding:24px; }
+.small-note { color:var(--muted); font-size:11px; line-height:1.6; margin-top:12px; }
+.footer { color:var(--muted); font-size:11px; margin-top:24px; text-align:right; }
+
+/* RECENT ALERT HISTORY */
+
+.recent-alert-list { display:flex; flex-direction:column; gap:12px; }
+
+.recent-alert-item {
+    display:flex;
+    align-items:flex-start;
+    gap:13px;
+    padding:15px;
+    background:#f8faff;
+    border:1px solid var(--border);
+    border-radius:10px;
+}
+
+.recent-alert-indicator {
+    width:9px;
+    height:9px;
+    border-radius:50%;
+    margin-top:5px;
+    flex-shrink:0;
+    background:var(--yellow);
+}
+
+.recent-alert-indicator.CRITICAL { background:var(--red); }
+.recent-alert-content { flex:1; min-width:0; }
+.recent-alert-heading { font-size:13px; font-weight:750; margin-bottom:5px; overflow-wrap:anywhere; }
+.recent-alert-meta { color:var(--muted); font-size:11px; line-height:1.6; }
+
+.alert-severity {
+    display:inline-block;
+    padding:4px 8px;
+    border-radius:5px;
+    font-size:10px;
+    font-weight:800;
+    background:#fff3d8;
+    color:#a56b08;
+    margin-bottom:6px;
+}
+
+.alert-severity.CRITICAL { background:#ffe9e9; color:#c52e38; }
+
+.no-alerts {
+    text-align:center;
+    padding:28px 15px;
+    color:var(--muted);
+    font-size:12px;
+    background:#f8faff;
+    border:1px dashed var(--border);
+    border-radius:10px;
+}
+
+/* COLLAPSIBLE SECTIONS */
+
+.collapsible-panel summary {
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:12px;
+    cursor:pointer;
+    font-size:15px;
+    font-weight:750;
+    list-style:none;
+}
+
+.collapsible-panel summary::-webkit-details-marker { display:none; }
+
+.collapsible-panel summary::after {
+    content:"+";
+    font-size:22px;
+    color:var(--blue);
+}
+
+.collapsible-panel[open] summary::after { content:"−"; }
+
+.collapse-hint {
+    color:var(--muted);
+    font-size:11px;
+    font-weight:400;
+    margin-left:auto;
+}
+
+.collapsible-panel[open] summary { margin-bottom:18px; }
+
+@media (max-width:1050px) {
+    .sidebar { width:195px; }
+    .main { padding:20px; }
+    .cards { grid-template-columns:repeat(2,minmax(0,1fr)); }
+    .two-columns { grid-template-columns:1fr; }
+}
+
+@media (max-width:650px) {
+    .app { display:block; }
+    .sidebar { display:block; width:100%; padding:16px; }
+    .nav-title { margin:20px 8px 10px; }
+    .nav-list { display:flex; flex-wrap:wrap; gap:6px; }
+    .nav-item { margin:0; padding:10px; font-size:11px; }
+    .sidebar-footer { margin-top:18px; }
+    .main { padding:17px; }
+    .cards { grid-template-columns:1fr; }
+    h1 { font-size:22px; }
+    .axis-grid { gap:7px; }
+    .axis-item { padding:12px 8px; }
+    .axis-value { font-size:17px; }
+    .info-grid { grid-template-columns:1fr 1fr; }
+}
+</style>
+</head>
+
+<body>
+<div class="app">
+
+<aside class="sidebar">
+    <div class="brand">INDUSTRIAL IQ</div>
+    <div class="brand-subtitle">MONITORING SYSTEM</div>
+
+    <div class="nav-title">WORKSPACE</div>
+
+    <nav class="nav-list" aria-label="Dashboard navigation">
+        <a class="nav-item active" href="#overview">▦ Overview</a>
+        <a class="nav-item" href="#analytics">⌁ Sensor Analytics</a>
+        <a class="nav-item" href="#failure-detection">◈ Failure Detection</a>
+        <a class="nav-item" href="#recent-alerts">◷ Recent Alerts</a>
+        <a class="nav-item" href="#data-logging">▤ Data Logging</a>
+        <a class="nav-item" href="#device-monitoring">⚙ Device Monitoring</a>
+    </nav>
+
+    <div class="sidebar-footer">
+        <strong>Monitoring Node</strong><br>
+        ESP32 Sensor Gateway<br>
+        Protocol: MQTT<br>
+        API: Flask
+    </div>
+</aside>
+
+<main class="main">
+
+<header class="topbar" id="overview">
+    <div>
+        <h1>Monitoring Overview</h1>
+        <p class="subtitle">Real-time industrial sensor readings and failure analysis</p>
+    </div>
+
+    <div class="top-status">
+        <span class="dot offline" id="connectionDot"></span>
+        <span id="connectionText">CONNECTING...</span>
+    </div>
+</header>
+
+<h2 class="section-heading">Live Sensor Metrics</h2>
+
+<section class="cards">
+    <div class="card">
+        <div class="card-label">Temperature</div>
+        <div class="card-value"><span id="temperature">--</span> <span class="unit">°C</span></div>
+        <div class="card-note">DHT temperature sensor</div>
+    </div>
+
+    <div class="card">
+        <div class="card-label">Relative Humidity</div>
+        <div class="card-value"><span id="humidity">--</span> <span class="unit">%</span></div>
+        <div class="card-note">Ambient humidity level</div>
+    </div>
+
+    <div class="card">
+        <div class="card-label">Light Intensity</div>
+        <div class="card-value" id="light">--</div>
+        <div class="card-note">LDR raw ADC reading</div>
+    </div>
+
+    <div class="card">
+        <div class="card-label">Acceleration Magnitude</div>
+        <div class="card-value"><span id="acceleration">--</span> <span class="unit">g</span></div>
+        <div class="card-note">Combined three-axis acceleration</div>
+    </div>
+
+    <div class="card">
+        <div class="card-label">Vibration Variation</div>
+        <div class="card-value"><span id="vibration">--</span> <span class="unit">g</span></div>
+        <div class="card-note">Calculated acceleration variation</div>
+    </div>
+
+    <div class="card">
+        <div class="card-label">System Condition</div>
+        <div class="status-text" id="status">WAITING</div>
+        <div class="card-note">Rule-based condition assessment</div>
+    </div>
+</section>
+
+<h2 class="section-heading" id="analytics">Sensor Analytics</h2>
+
+<section class="two-columns">
+    <div class="panel">
+        <h3>Temperature Trend</h3>
+        <p class="panel-description">Recent readings in °C</p>
+        <div class="chart-wrap"><canvas id="temperatureChart"></canvas></div>
+    </div>
+
+    <div class="panel">
+        <h3>Vibration Trend</h3>
+        <p class="panel-description">Recent acceleration variation in g</p>
+        <div class="chart-wrap"><canvas id="vibrationChart"></canvas></div>
+    </div>
+</section>
+
+<section class="two-columns">
+    <div class="panel">
+        <h3>Acceleration Axes</h3>
+        <p class="panel-description">Real-time acceleration from the motion sensor</p>
+
+        <div class="axis-grid">
+            <div class="axis-item">
+                <div class="axis-label">ACCELERATION X</div>
+                <div class="axis-value" id="ax">--</div>
+                <div class="axis-unit">g</div>
+            </div>
+            <div class="axis-item">
+                <div class="axis-label">ACCELERATION Y</div>
+                <div class="axis-value" id="ay">--</div>
+                <div class="axis-unit">g</div>
+            </div>
+            <div class="axis-item">
+                <div class="axis-label">ACCELERATION Z</div>
+                <div class="axis-value" id="az">--</div>
+                <div class="axis-unit">g</div>
+            </div>
+        </div>
+
+        <h3 style="margin-top:24px;">Gyroscope Axes</h3>
+        <p class="panel-description">Angular velocity from the motion sensor</p>
+
+        <div class="axis-grid">
+            <div class="axis-item">
+                <div class="axis-label">GYROSCOPE X</div>
+                <div class="axis-value" id="gx">--</div>
+                <div class="axis-unit">°/s</div>
+            </div>
+            <div class="axis-item">
+                <div class="axis-label">GYROSCOPE Y</div>
+                <div class="axis-value" id="gy">--</div>
+                <div class="axis-unit">°/s</div>
+            </div>
+            <div class="axis-item">
+                <div class="axis-label">GYROSCOPE Z</div>
+                <div class="axis-value" id="gz">--</div>
+                <div class="axis-unit">°/s</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="panel">
+        <h3>Live Sensor Summary</h3>
+        <p class="panel-description">Latest values received from the Flask API</p>
+
+        <div class="info-grid">
+            <div class="info-box">
+                <div class="info-label">Temperature</div>
+                <div class="info-value"><span id="summaryTemp">--</span> °C</div>
+            </div>
+            <div class="info-box">
+                <div class="info-label">Humidity</div>
+                <div class="info-value"><span id="summaryHumidity">--</span> %</div>
+            </div>
+            <div class="info-box">
+                <div class="info-label">Acceleration</div>
+                <div class="info-value"><span id="summaryAcceleration">--</span> g</div>
+            </div>
+            <div class="info-box">
+                <div class="info-label">Vibration Variation</div>
+                <div class="info-value"><span id="summaryVibration">--</span> g</div>
+            </div>
+        </div>
+
+        <p class="small-note">Sensor values refresh automatically while this page is open.</p>
+    </div>
+</section>
+
+<h2 class="section-heading" id="failure-detection">Failure Detection</h2>
+
+<section class="two-columns">
+    <div class="panel">
+        <h3>Condition Assessment</h3>
+        <p class="panel-description">Latest rule-based monitoring result from the API</p>
+
+        <div class="alert-panel">
+            <div class="alert-icon" id="alertIcon">✓</div>
+            <div>
+                <div class="alert-title" id="alertTitle">Waiting for sensor data</div>
+                <div class="alert-message" id="alertMessage">
+                    The system will display alerts reported by the configured failure detection rules.
+                </div>
+            </div>
+        </div>
+
+        <div style="margin-top:22px;">
+            <div class="card-label">Current System Status</div>
+            <div class="info-value" id="failureStatus">WAITING</div>
+        </div>
+
+        <div style="margin-top:22px;">
+            <div class="card-label">Active Alerts</div>
+            <div class="info-value" id="alertCount">0</div>
+        </div>
+    </div>
+
+    <div class="panel">
+        <h3>Latest Alert Details</h3>
+        <p class="panel-description">Messages returned by the backend failure detector</p>
+        <div id="alertList" class="alert-message">No alert information received yet.</div>
+        <p class="small-note">
+            Alerts depend on the thresholds and rules configured in your Flask application.
+            This dashboard does not independently validate industrial safety conditions.
+        </p>
+    </div>
+</section>
+
+<!-- COLLAPSIBLE RECENT ALERTS -->
+
+<h2 class="section-heading" id="recent-alerts">Recent Alerts</h2>
+
+<details class="panel collapsible-panel">
+    <summary>
+        <span>Alert Event History</span>
+        <span class="collapse-hint">Click to view history</span>
+    </summary>
+
+    <p class="panel-description">
+        Historical warnings and critical events with their occurrence date and time.
+    </p>
+
+    <div id="recentAlertList" class="recent-alert-list">
+        <div class="no-alerts">No alerts have been recorded yet.</div>
+    </div>
+
+    <p class="small-note">
+        Alert events remain in this history even after the live system status returns to NORMAL.
+        The backend retains the latest 100 events.
+    </p>
+</details>
+
+<!-- COLLAPSIBLE DATA LOGGING -->
+
+<h2 class="section-heading" id="data-logging">Data Logging</h2>
+
+<details class="panel collapsible-panel">
+    <summary>
+        <span>Recent Sensor Readings</span>
+        <span class="collapse-hint">Click to view readings</span>
+    </summary>
+
+    <p class="panel-description">
+        Readings collected by this dashboard while the page remains open.
+    </p>
+
+    <div class="button-row">
+        <button class="btn" id="downloadCsvButton" type="button">↓ Download Session CSV</button>
+        <button class="btn secondary" id="clearTableButton" type="button">Clear Displayed History</button>
+    </div>
+
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Time</th>
+                    <th>Temperature (°C)</th>
+                    <th>Humidity (%)</th>
+                    <th>Light</th>
+                    <th>Acceleration (g)</th>
+                    <th>Vibration (g)</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody id="readingsTable">
+                <tr>
+                    <td colspan="7" class="empty-row">Waiting for sensor readings...</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <p class="small-note" id="loggingMessage">
+        The CSV button exports readings collected in this browser session.
+        Your existing backend CSV logger continues separately.
+    </p>
+</details>
+
+<h2 class="section-heading" id="device-monitoring">Device Monitoring</h2>
+
+<section class="two-columns">
+    <div class="panel">
+        <h3>Gateway and API Connection</h3>
+        <p class="panel-description">Connection information visible to the dashboard</p>
+
+        <div class="info-grid">
+            <div class="info-box">
+                <div class="info-label">Flask API</div>
+                <div class="info-value" id="deviceApiStatus">Checking...</div>
+            </div>
+            <div class="info-box">
+                <div class="info-label">Last Successful Poll</div>
+                <div class="info-value" id="lastPoll">Not received</div>
+            </div>
+            <div class="info-box">
+                <div class="info-label">Sensor Data Timestamp</div>
+                <div class="info-value" id="updatedAt">Waiting for data...</div>
+            </div>
+            <div class="info-box">
+                <div class="info-label">Last API Error</div>
+                <div class="info-value" id="apiError">None</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="panel">
+        <h3>System Architecture</h3>
+        <p class="panel-description">Data path used by this project</p>
+
+        <div class="info-grid">
+            <div class="info-box">
+                <div class="info-label">Sensor Gateway</div>
+                <div class="info-value">ESP32</div>
+            </div>
+            <div class="info-box">
+                <div class="info-label">Messaging</div>
+                <div class="info-value">MQTT</div>
+            </div>
+            <div class="info-box">
+                <div class="info-label">Backend</div>
+                <div class="info-value">Flask API</div>
+            </div>
+            <div class="info-box">
+                <div class="info-label">API Endpoint</div>
+                <div class="info-value">/api/data</div>
+            </div>
+        </div>
+
+        <p class="small-note">
+            API connectivity confirms that the browser can reach Flask.
+            It does not, by itself, prove that the ESP32 is connected to the MQTT broker.
+        </p>
+    </div>
+</section>
+
+<div class="footer">Industrial Sensor Failure Detection System</div>
+
+</main>
+</div>
+
+<script>
+const temperatureHistory = [];
+const vibrationHistory = [];
+const chartLabels = [];
+const sessionReadings = [];
+
+let lastReadingKey = null;
+let requestInProgress = false;
+
+const MAX_HISTORY = 30;
+
+function setText(id, value, decimals = null) {
+    const element = document.getElementById(id);
+    if (!element) return;
+
+    if (value === null || value === undefined || value === "") {
+        element.textContent = "--";
+        return;
+    }
+
+    const number = Number(value);
+
+    if (!Number.isFinite(number)) {
+        element.textContent = "--";
+        return;
+    }
+
+    element.textContent = decimals === null ? String(value) : number.toFixed(decimals);
+}
+
+function formatNumber(value, decimals = 2) {
+    const number = Number(value);
+    return Number.isFinite(number) ? number.toFixed(decimals) : "";
+}
+
+function formatTimestamp(timestamp) {
+    if (!timestamp) return "Time unavailable";
+
+    const date = new Date(timestamp);
+
+    return Number.isNaN(date.getTime())
+        ? String(timestamp)
+        : date.toLocaleString();
+}
+
+/* RECENT ALERT HISTORY */
+
+function renderRecentAlerts(history) {
+    const container = document.getElementById("recentAlertList");
+    container.replaceChildren();
+
+    if (!Array.isArray(history) || history.length === 0) {
+        const empty = document.createElement("div");
+        empty.className = "no-alerts";
+        empty.textContent = "No alerts have been recorded yet.";
+        container.appendChild(empty);
+        return;
+    }
+
+    history.slice(0, 20).forEach(event => {
+        const item = document.createElement("div");
+        item.className = "recent-alert-item";
+
+        const severity = String(
+            event.severity || (
+                String(event.alert || "").startsWith("CRITICAL")
+                    ? "CRITICAL"
+                    : "WARNING"
+            )
+        ).toUpperCase();
+
+        const indicator = document.createElement("div");
+        indicator.className = "recent-alert-indicator " + severity;
+
+        const content = document.createElement("div");
+        content.className = "recent-alert-content";
+
+        const badge = document.createElement("span");
+        badge.className = "alert-severity " + severity;
+        badge.textContent = severity;
+
+        const heading = document.createElement("div");
+        heading.className = "recent-alert-heading";
+        heading.textContent = event.alert || "Unknown alert";
+
+        const meta = document.createElement("div");
+        meta.className = "recent-alert-meta";
+        meta.textContent = "Occurred: " + formatTimestamp(event.timestamp);
+
+        content.appendChild(badge);
+        content.appendChild(heading);
+        content.appendChild(meta);
+
+        item.appendChild(indicator);
+        item.appendChild(content);
+        container.appendChild(item);
+    });
+}
+
+/* CHARTS */
+
+function drawChart(canvasId, values, labels, unit) {
+    const canvas = document.getElementById(canvasId);
+    if (!canvas) return;
+
+    const rect = canvas.getBoundingClientRect();
+    if (rect.width <= 0 || rect.height <= 0) return;
+
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = Math.round(rect.width * dpr);
+    canvas.height = Math.round(rect.height * dpr);
+
+    const ctx = canvas.getContext("2d");
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+    const width = rect.width;
+    const height = rect.height;
+    const left = 48;
+    const right = 12;
+    const top = 14;
+    const bottom = 28;
+    const plotWidth = width - left - right;
+    const plotHeight = height - top - bottom;
+
+    ctx.clearRect(0, 0, width, height);
+
+    const valid = values.filter(Number.isFinite);
+
+    if (valid.length === 0) {
+        ctx.fillStyle = "#738198";
+        ctx.font = "12px Segoe UI, Arial";
+        ctx.fillText("Waiting for readings...", left, height / 2);
+        return;
+    }
+
+    let min = Math.min(...valid);
+    let max = Math.max(...valid);
+
+    if (min === max) {
+        min -= Math.max(Math.abs(min) * 0.05, 0.5);
+        max += Math.max(Math.abs(max) * 0.05, 0.5);
+    } else {
+        const padding = (max - min) * 0.15;
+        min -= padding;
+        max += padding;
+    }
+
+    const y = value => top + ((max - value) / (max - min)) * plotHeight;
+
+    ctx.font = "10px Segoe UI, Arial";
+    ctx.textAlign = "right";
+    ctx.textBaseline = "middle";
+    ctx.strokeStyle = "#e8edf5";
+    ctx.fillStyle = "#7c899d";
+    ctx.lineWidth = 1;
+
+    for (let i = 0; i <= 4; i++) {
+        const yy = top + plotHeight * i / 4;
+        const val = max - (max - min) * i / 4;
+
+        ctx.beginPath();
+        ctx.moveTo(left, yy);
+        ctx.lineTo(width - right, yy);
+        ctx.stroke();
+
+        ctx.fillText(val.toFixed(2), left - 7, yy);
+    }
+
+    const points = values
+        .map((value, index) => ({ value, index }))
+        .filter(point => Number.isFinite(point.value));
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(left, top, plotWidth, plotHeight);
+    ctx.clip();
+
+    if (points.length > 0) {
+        ctx.beginPath();
+
+        points.forEach((point, index) => {
+            const x = left + (
+                values.length <= 1
+                    ? plotWidth / 2
+                    : point.index * plotWidth / (values.length - 1)
+            );
+
+            if (index === 0) ctx.moveTo(x, y(point.value));
+            else ctx.lineTo(x, y(point.value));
+        });
+
+        ctx.strokeStyle = "#3478f6";
+        ctx.lineWidth = 2.5;
+        ctx.lineJoin = "round";
+        ctx.lineCap = "round";
+        ctx.stroke();
+
+        points.forEach(point => {
+            const x = left + (
+                values.length <= 1
+                    ? plotWidth / 2
+                    : point.index * plotWidth / (values.length - 1)
+            );
+
+            ctx.beginPath();
+            ctx.arc(x, y(point.value), 3, 0, Math.PI * 2);
+            ctx.fillStyle = "#3478f6";
+            ctx.fill();
+        });
+    }
+
+    ctx.restore();
+
+    ctx.textAlign = "center";
+    ctx.textBaseline = "alphabetic";
+    ctx.fillStyle = "#7c899d";
+
+    if (labels.length > 0) {
+        ctx.fillText(labels[0], left + 18, height - 7);
+
+        if (labels.length > 1) {
+            ctx.fillText(labels[labels.length - 1], width - right - 18, height - 7);
+        }
+    }
+
+    ctx.textAlign = "left";
+    ctx.fillText(unit, 4, 10);
+}
+
+/* FAILURE DETECTION STATUS */
+
+function updateStatus(data) {
+    const status = String(data.status || "UNKNOWN").toUpperCase();
+
+    const statusElement = document.getElementById("status");
+    statusElement.textContent = status;
+    statusElement.className = "status-text " + status;
+
+    document.getElementById("failureStatus").textContent = status;
+
+    const icon = document.getElementById("alertIcon");
+    const title = document.getElementById("alertTitle");
+    const message = document.getElementById("alertMessage");
+
+    icon.className = "alert-icon " + status;
+
+    const alerts = Array.isArray(data.alerts) ? data.alerts : [];
+
+    document.getElementById("alertCount").textContent = alerts.length;
+
+    const alertList = document.getElementById("alertList");
+    alertList.replaceChildren();
+
+    if (alerts.length === 0) {
+        const item = document.createElement("div");
+        item.textContent = status === "NORMAL"
+            ? "No active alerts reported by the backend."
+            : "No alert messages were included in the latest API response.";
+        alertList.appendChild(item);
+    } else {
+        const list = document.createElement("ul");
+        list.style.paddingLeft = "18px";
+
+        alerts.forEach(alert => {
+            const item = document.createElement("li");
+            item.style.marginBottom = "8px";
+            item.textContent = String(alert);
+            list.appendChild(item);
+        });
+
+        alertList.appendChild(list);
+    }
+
+    if (status === "NORMAL") {
+        icon.textContent = "✓";
+        title.textContent = "No active rule-based alerts";
+        message.textContent =
+            "The backend reports that monitored values are within its configured limits.";
+    } else if (status === "UNKNOWN" || status === "WAITING") {
+        icon.textContent = "…";
+        title.textContent = "Waiting for a recognised status";
+        message.textContent =
+            "Check the backend response and configured status rules.";
+    } else {
+        icon.textContent = "!";
+        title.textContent = status + " condition reported";
+        message.textContent = alerts.length
+            ? alerts.map(String).join(" | ")
+            : "The backend reported a non-normal status. Check the configured detection rules.";
+    }
+}
+
+/* DATA LOGGING */
+
+function addReadingToTable(data, timestamp) {
+    const table = document.getElementById("readingsTable");
+
+    if (table.querySelector(".empty-row")) {
+        table.replaceChildren();
+    }
+
+    const row = document.createElement("tr");
+
+    const values = [
+        formatTimestamp(timestamp),
+        formatNumber(data.temperature, 1),
+        formatNumber(data.humidity, 1),
+        data.light ?? "",
+        formatNumber(data.acceleration, 3),
+        formatNumber(data.vibration_variation, 4),
+        data.status || "UNKNOWN"
+    ];
+
+    values.forEach(value => {
+        const cell = document.createElement("td");
+        cell.textContent = String(value);
+        row.appendChild(cell);
+    });
+
+    table.prepend(row);
+
+    while (table.rows.length > MAX_HISTORY) {
+        table.deleteRow(table.rows.length - 1);
+    }
+}
+
+function addReading(data) {
+    const timestamp = data.updated_at || data.timestamp || new Date().toISOString();
+    const readingKey = String(timestamp);
+
+    if (readingKey === lastReadingKey) return;
+
+    lastReadingKey = readingKey;
+
+    const reading = {
+        timestamp,
+        temperature: data.temperature ?? "",
+        humidity: data.humidity ?? "",
+        light: data.light ?? "",
+        acceleration: data.acceleration ?? "",
+        vibration_variation: data.vibration_variation ?? "",
+        ax: data.ax ?? "",
+        ay: data.ay ?? "",
+        az: data.az ?? "",
+        gx: data.gx ?? "",
+        gy: data.gy ?? "",
+        gz: data.gz ?? "",
+        status: data.status || "UNKNOWN",
+        alerts: Array.isArray(data.alerts) ? data.alerts.join(" | ") : ""
+    };
+
+    sessionReadings.push(reading);
+
+    if (sessionReadings.length > 1000) sessionReadings.shift();
+
+    const label = timestamp
+        ? String(timestamp).replace("T", " ").slice(11, 19)
+        : new Date().toLocaleTimeString();
+
+    temperatureHistory.push(Number(data.temperature));
+    vibrationHistory.push(Number(data.vibration_variation));
+    chartLabels.push(label);
+
+    while (temperatureHistory.length > MAX_HISTORY) temperatureHistory.shift();
+    while (vibrationHistory.length > MAX_HISTORY) vibrationHistory.shift();
+    while (chartLabels.length > MAX_HISTORY) chartLabels.shift();
+
+    addReadingToTable(data, timestamp);
+
+    drawChart("temperatureChart", temperatureHistory, chartLabels, "°C");
+    drawChart("vibrationChart", vibrationHistory, chartLabels, "g");
+
+    document.getElementById("loggingMessage").textContent =
+        "Collected " + sessionReadings.length +
+        " unique readings in this browser session. Download CSV to save them.";
+}
+
+/* FETCH SENSOR DATA */
+
+async function fetchSensorData() {
+    if (requestInProgress) return;
+
+    requestInProgress = true;
+
+    try {
+        const response = await fetch("/api/data", { cache:"no-store" });
+
+        if (!response.ok) {
+            throw new Error("API returned HTTP " + response.status);
+        }
+
+        const data = await response.json();
+
+        document.getElementById("connectionText").textContent = "API CONNECTED";
+        document.getElementById("connectionDot").classList.remove("offline");
+        document.getElementById("deviceApiStatus").textContent = "Connected";
+        document.getElementById("apiError").textContent = "None";
+        document.getElementById("lastPoll").textContent =
+            new Date().toLocaleTimeString();
+
+        setText("temperature", data.temperature, 1);
+        setText("humidity", data.humidity, 1);
+        setText("light", data.light);
+        setText("acceleration", data.acceleration, 3);
+        setText("vibration", data.vibration_variation, 4);
+
+        setText("ax", data.ax, 3);
+        setText("ay", data.ay, 3);
+        setText("az", data.az, 3);
+        setText("gx", data.gx, 2);
+        setText("gy", data.gy, 2);
+        setText("gz", data.gz, 2);
+
+        setText("summaryTemp", data.temperature, 1);
+        setText("summaryHumidity", data.humidity, 1);
+        setText("summaryAcceleration", data.acceleration, 3);
+        setText("summaryVibration", data.vibration_variation, 4);
+
+        const timestamp = data.updated_at || data.timestamp || "";
+
+        document.getElementById("updatedAt").textContent =
+            timestamp ? formatTimestamp(timestamp) : "Timestamp unavailable";
+
+        updateStatus(data);
+        renderRecentAlerts(data.alert_history);
+        addReading(data);
+
+    } catch (error) {
+        document.getElementById("connectionText").textContent = "API DISCONNECTED";
+        document.getElementById("connectionDot").classList.add("offline");
+        document.getElementById("deviceApiStatus").textContent = "Disconnected";
+        document.getElementById("apiError").textContent =
+            error.message || "Request failed";
+
+        console.error("Unable to fetch sensor data:", error);
+
+    } finally {
+        requestInProgress = false;
+    }
+}
+
+/* CSV DOWNLOAD */
+
+function downloadCsv() {
+    if (sessionReadings.length === 0) {
+        document.getElementById("loggingMessage").textContent =
+            "No readings collected yet. Wait for sensor data, then download again.";
+        return;
+    }
+
+    const columns = [
+        ["timestamp","Timestamp"],
+        ["temperature","Temperature_C"],
+        ["humidity","Humidity_percent"],
+        ["light","Light_ADC"],
+        ["acceleration","Acceleration_g"],
+        ["vibration_variation","Vibration_Variation_g"],
+        ["ax","Acceleration_X_g"],
+        ["ay","Acceleration_Y_g"],
+        ["az","Acceleration_Z_g"],
+        ["gx","Gyroscope_X_deg_s"],
+        ["gy","Gyroscope_Y_deg_s"],
+        ["gz","Gyroscope_Z_deg_s"],
+        ["status","Status"],
+        ["alerts","Alerts"]
+    ];
+
+    function escapeCsv(value) {
+        const text = String(value ?? "");
+        return '"' + text.replace(/"/g, '""') + '"';
+    }
+
+    const lines = [
+        columns.map(column => escapeCsv(column[1])).join(","),
+        ...sessionReadings.map(reading =>
+            columns.map(column => escapeCsv(reading[column[0]])).join(",")
+        )
+    ];
+
+    const blob = new Blob(["\uFEFF" + lines.join("\r\n")], {
+        type:"text/csv;charset=utf-8;"
+    });
+
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+
+    link.href = url;
+    link.download = "industrial_sensor_session.csv";
+
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+
+    URL.revokeObjectURL(url);
+}
+
+document.getElementById("downloadCsvButton")
+    .addEventListener("click", downloadCsv);
+
+document.getElementById("clearTableButton")
+    .addEventListener("click", () => {
+        document.getElementById("readingsTable").innerHTML =
+            '<tr><td colspan="7" class="empty-row">Displayed history cleared. New readings will appear here.</td></tr>';
+
+        document.getElementById("loggingMessage").textContent =
+            "The displayed table was cleared. Session CSV history is still retained until you leave or reload this page.";
+    });
+
+/* SIDEBAR NAVIGATION */
+
+const navLinks = document.querySelectorAll(".nav-item");
+
+function updateActiveNavigation() {
+    const currentHash = window.location.hash || "#overview";
+
+    navLinks.forEach(link => {
+        link.classList.toggle(
+            "active",
+            link.getAttribute("href") === currentHash
+        );
+    });
+}
+
+window.addEventListener("hashchange", updateActiveNavigation);
+updateActiveNavigation();
+
+/* START DASHBOARD */
+
+fetchSensorData();
+setInterval(fetchSensorData, 2000);
+
+window.addEventListener("resize", () => {
+    drawChart("temperatureChart", temperatureHistory, chartLabels, "°C");
+    drawChart("vibrationChart", vibrationHistory, chartLabels, "g");
+});
+</script>
+
+</body>
+</html>
